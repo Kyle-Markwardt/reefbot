@@ -1,0 +1,24 @@
+
+# Add video details to dataframe
+for index, row in videos_df.iterrows():
+    video_id = row['video_id']
+    
+    # Get video details
+    video_details = get_video_details(video_id)
+    
+    # Extract the details (assuming only one item in the details list)
+    if video_details:
+        video_length = video_details[0]['length']
+        
+        # Add the details as new columns to the DataFrame
+        videos_df.loc[index, 'length'] = video_length
+
+    captions = get_caption_ids(video_id)
+
+    if captions:
+        caption_id = captions[0]['id']
+        
+        # Add the details as new columns to the DataFrame
+        videos_df.loc[index, 'caption_id'] = caption_id
+
+display(videos_df.head())
