@@ -1,24 +1,16 @@
+# Instead of looping over each row of the dataframe and passing the function, we pass one list to the function, which makes one API call
+# Step 1: Create a list of video IDs from the DataFrame
+video_ids = df['video_id'].tolist()
 
-# Add video details to dataframe
-for index, row in videos_df.iterrows():
-    video_id = row['video_id']
-    
-    # Get video details
-    video_details = get_video_details(video_id)
-    
-    # Extract the details (assuming only one item in the details list)
-    if video_details:
-        video_length = video_details[0]['length']
-        
-        # Add the details as new columns to the DataFrame
-        videos_df.loc[index, 'length'] = video_length
+# Step 2: Call the function to get video details for all video IDs
+video_details = get_video_details(video_ids)
 
-    captions = get_caption_ids(video_id)
+# Step 3: Convert the video details to a DataFrame
+video_details_df = pd.DataFrame(video_details)
 
-    if captions:
-        caption_id = captions[0]['id']
-        
-        # Add the details as new columns to the DataFrame
-        videos_df.loc[index, 'caption_id'] = caption_id
+video_details_df.head()
 
-display(videos_df.head())
+# Step 4: Merge or join the original DataFrame with the video details DataFrame
+merged_df = pd.merge(df, video_details_df, on='video_id', how='left')
+
+merged_df
