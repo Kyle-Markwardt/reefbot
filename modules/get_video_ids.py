@@ -1,3 +1,4 @@
+
 import os
 import json
 from dotenv import load_dotenv
@@ -13,8 +14,12 @@ load_dotenv()
 # Access API key
 yt_api_key = os.getenv("YOUTUBE_API_KEY")
 
+
 # Create a YouTube API client
 youtube = build('youtube', 'v3', developerKey=yt_api_key)
+
+
+#### LISTS ####
 
 # create dictionary of playlist urls
 # url_base = https://www.youtube.com/playlist?list=
@@ -29,6 +34,9 @@ playlist_urls = {'52_weeks' : 'PLBaMLrfToJyybUT18OE3fMomFb9XU0ffC',
                  }
 
 playlist_test = {'nutrients' : 'PLBaMLrfToJyzCXREqXjsl066OzEgvXfJr'}
+
+
+#### FUNCTIONS ####
 
 # Function to retrieve video URLs and titles from a playlist
 def get_playlist_videos(list_name, playlist_id):
@@ -75,17 +83,35 @@ def get_playlist_videos(list_name, playlist_id):
     return videos
 
 
+#### MAIN ####
+
 # Initialize an empty list to store all video dictionaries
 all_videos = []
 
+# Load vids_with_details from CSV if the file exists, otherwise initialize it as None
+if os.path.exists('../resources/video_list/videos_with_details.csv'):
+    vids_with_details = pd.read_csv('../resources/video_list/videos_with_details.csv')
+else:
+    vids_with_details = None
+
 # Iterate over the playlist IDs and retrieve videos
 for name, id in playlist_urls.items():
-    videos = get_playlist_videos(name, id)
-    all_videos.extend(videos)  # Extend the list with videos from the current playlist
+    if vids_with_details is None or name not in vids_with_details['playlist'].values:
+        videos = get_playlist_videos(name, id)
+        all_videos.extend(videos)  # Extend the list with videos from the current playlist
 
 # Create a DataFrame from the list of dictionaries
 videos_df = pd.DataFrame(all_videos)
+videos_df.set_index('video_id', inplace=True)
 
-# Save list
-os.makedirs('../resources/video_list', exist_ok=True)
-videos_df.to_csv('../resources/video_list/videos.csv', index=False)
+# Save File
+if vids_with_details is None:
+    # If starting new:
+    print('No existing records found. Saving new list.')
+    os.makedirs('../resources/video_list', exist_ok=True)
+    videos_df.to_csv('../resources/video_list/videos.csv', index=True)
+else:
+    print('Adding new videos to existing records...')
+    result_df = pd.concat([vids_with_details, videos_df], ignore_index=False)
+    result_df.to_csv('../resources/video_list/videos_with_details.csv')
+    print("Done.")

@@ -1,4 +1,3 @@
-
 # This script gets the video length and caption ids for the videos in the video list
 
 import os
@@ -24,20 +23,21 @@ youtube = build('youtube', 'v3', developerKey=yt_api_key)
 
 # Load videos list
 try:
-    videos_with_captions = pd.read_csv('../resources/video_list/videos_with_captions.csv', index_col=0)
+    videos_with_captions = pd.read_csv('../resources/video_list/videos_with_details.csv', index_col=0)
     print('Succcessfully loaded videos with captions')
     loaded = videos_with_captions.copy()
 
 except:
     videos_df = pd.read_csv('../resources/video_list/videos.csv', index_col=0)
     print('No file found with caption details. Loaded base videos df')
+    display(videos_df.head())
     loaded = videos_df.copy()
 
 if 'video_id' in loaded.columns:
     loaded.set_index('video_id', inplace=True)
 
 
-### FUNCTIONS ### 
+#### FUNCTIONS ####
 
 # Function for video details
 def get_video_details(video_id):
@@ -113,12 +113,12 @@ def get_caption_ids(video_id):
     return captions
 
 
-### MAIN ###
+#### MAIN ####
 
 # Test Frame
 test_df = loaded.head(10)
 
-#Set environment variable -- dev is for testing the code against the API in small batches to keep quota usage down
+# Set environment variable -- dev is for testing the code against the API in small batches to keep quota usage down
 production = True
 
 if production == True:
@@ -154,18 +154,16 @@ for index, row in df.iterrows():
                 caption_id = captions[0]['id']
                 df.loc[index, 'caption_id'] = caption_id
 
-
 null_length = df['length'].isnull().value_counts()
-print(null_length)
 null_caption = df['caption_id'].isnull().value_counts()
+print(null_length)
 print(null_caption)
-
 
 complete = df[df['length'].notnull() & df['caption_id'].notnull()]
 stragglers = df[df['length'].isnull() | df['caption_id'].isnull()]
 
 ### Save outputs
-df.to_csv('../resources/video_list/videos_with_captions.csv') 
+df.to_csv('../resources/video_list/videos_with_details.csv') 
 stragglers.to_csv('../resources/video_list/incomplete.csv')
 complete.to_csv('../resources/video_list/details_complete.csv')
 
